@@ -26,6 +26,18 @@ local function main()
                 v.Lifetime = NumberRange.new(0)
             end
         end
+    elseif option == "discord" then
+        game.StarterGui:SetCore("SendNotification",{
+            Title = "Discord!";
+            Text = "https://discord.gg/encrypt";
+            Duration = 10;
+        })
+    elseif option == "encryptcrasher" then
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/LPrandom/lua-projects/master/dahoodcrasher.lua"))()
+    elseif option == "randnum" then
+        return math.random(1,999999)
+    else
+        return print("Error with the end point.")
     end
 end
 
