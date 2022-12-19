@@ -95,6 +95,7 @@ while Running == true do
         end
     end
 
+    game:service"Players".LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-355,30,269)
     game:service"ReplicatedStorage".MainEvent:FireServer("PickSnow")
     game:service"ReplicatedStorage".MainEvent:FireServer("JoinCrew",tostring(SelectedId))
     local amt = getAmt()
