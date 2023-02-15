@@ -8,11 +8,6 @@ recommend:
 - put this on auto-exec
 ]] 
 
-getgenv().G_Settings = {
-    host = 1234567890, -- user id of the crasher / main acc
-    fps = 3 -- fps for alts
-}
-
 -- [[ no skids allowed no touch code below! ]] --
 
 if not game:IsLoaded() then
