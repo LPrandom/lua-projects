@@ -1,37 +1,46 @@
-getgenv().Running = true
-getgenv().Amount = 1600 -- make it higher if the crasher fails.
+--[[
+: steps
+1. the host on the setting, you put the ID of the crasher or your main acc
+2. you can set the fps for your alts, 1-3 reco
+3. don't press start until you fully loaded your accs that will help u.
 
-local Crasher = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local Label = Instance.new("TextLabel")
-local UICorner = Instance.new("UICorner")
+recommend:
+- put this on auto-exec
+]] 
 
-Crasher.Name = "Crasher"
-Crasher.Parent = game:service"CoreGui"
-Crasher.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+getgenv().G_Settings = {
+    host = 1234567890, -- user id of the crasher / main acc
+    fps = 3 -- fps for alts
+}
 
-MainFrame.Name = "MainFrame"
-MainFrame.Parent = Crasher
-MainFrame.BackgroundColor3 = Color3.fromRGB(60, 30, 149)
-MainFrame.BorderColor3 = Color3.fromRGB(60, 30, 149)
-MainFrame.Position = UDim2.new(0.403971493, 0, 0.614880919, 0)
-MainFrame.Size = UDim2.new(0, 242, 0, 63)
-MainFrame.Active = true
-MainFrame.Draggable = true
+-- [[ no skids allowed no touch code below! ]] --
 
-Label.Name = "Label"
-Label.Parent = MainFrame
-Label.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Label.BackgroundTransparency = 1.000
-Label.Position = UDim2.new(0.0867768601, 0, 0.095238097, 0)
-Label.Size = UDim2.new(0, 200, 0, 50)
-Label.Font = Enum.Font.Cartoon
-Label.Text = "Amount: 0/"..tostring(Amount)
-Label.TextColor3 = Color3.fromRGB(0, 0, 0)
-Label.TextSize = 30.000
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
 
-UICorner.CornerRadius = UDim.new(0, 4)
-UICorner.Parent = MainFrame
+repeat wait(0.001) until workspace.Players:FindFirstChild(game:service"Players".LocalPlayer.Name)
+
+local player = game:service"Players".LocalPlayer
+
+local isCrasher = G_Settings['host'] == player.UserId
+local enabled = false
+
+local function sayMsg(msg)
+    game:service"ReplicatedStorage".DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, 'All')
+end
+
+local function countTools()
+    return #player.Backpack:GetChildren()
+end
+
+local function resetChar()
+    for i,v in pairs(player.Character:GetChildren()) do
+        if v:IsA("MeshPart") or v:IsA("BasePart") then
+            v:Destroy()
+        end
+    end
+end
 
 local remotes = {
     "CHECKER_1",
@@ -52,61 +61,146 @@ __namecall = hookmetamethod(game, "__namecall", function(...)
     return __namecall(table.unpack(args))
 end)
 
-local function getAmt()
-    local cnt = 0
-    for i,v in pairs(game:service"Players".LocalPlayer.Character:GetChildren()) do
-        if v.Name == "[SnowBall]" or v.Name == "[SprayCan]" then
-            cnt = cnt + 1
-        end
-    end
-    return cnt
-end
-
-if game:service"Players".LocalPlayer.Character.BodyEffects:FindFirstChild("Attacking") then
-        game:service"Players".LocalPlayer.Character.BodyEffects:FindFirstChild("Attacking"):Destroy()
-    end
-    local g, groups = {},game:service"GroupService":GetGroupsAsync(game:service"Players".LocalPlayer.UserId)
-    for i,v in pairs(groups) do
-        table.insert(g,v.Id)
-    end
-    if not g[1] then
-        game:service"StarterGui":SetCore("SendNotification",{
-        Title = "Error!";
-        Text = "Please be atleast in 1 group.";
-        Duration = 10;
-    })
-    return
-end
-pcall(function()
-    game:GetService("Players").LocalPlayer.PlayerGui.MainScreenGui.Crew.CrewFrame:Destroy()
+player.Idled:Connect(function()
+    game:service"VirtualUser":Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+    wait(1)
+    game:service"VirtualUser":Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
 end)
-local SelectedId = g[math.random(#g)]
-if game:service"Players".LocalPlayer.Backpack:FindFirstChild("[SprayCan]") then
-    game:service"Players".LocalPlayer.Backpack:FindFirstChild("[SprayCan]").Parent = game:service"Players".LocalPlayer.Character
-end
 
-while Running == true do
-    if not Running then break end
-    wait()
-    for i,v in pairs(game:service"Players".LocalPlayer.Backpack:GetChildren()) do
-        if v.Name == "[SnowBall]" or v.Name == "[SprayCan]" then
-            v:FindFirstChild("Handle").Transparency = 100
-            v.Parent = game:service"Players".LocalPlayer.Character
+if isCrasher then
+    local totalTools, maximumTools = 0, 450
+    local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/theracisthub/libs/main/ocinhot"))()
+    local main = lib:Create("Crasher")
+    local txt = main:NewLabel("Status: 0/0 %0")
+    main:NewToggle("Enable","enables the crasher",false,function(bool)
+        enabled = bool
+        if bool then
+            sayMsg("start")
+        else
+            sayMsg("pause")
         end
-    end
-
-    game:service"Players".LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-355,30,269)
-    game:service"ReplicatedStorage".MainEvent:FireServer("PickSnow")
-    game:service"ReplicatedStorage".MainEvent:FireServer("JoinCrew",tostring(SelectedId))
-    local amt = getAmt()
-    
-    Label.Text = "Amount: "..tostring(amt).."/"..tostring(Amount)
-
-    if amt >= Amount then
-        for i,v in pairs(game:service"Players".LocalPlayer.Character:GetChildren()) do
-            if v:IsA("MeshPart") then
-                v:Destroy()
+    end)
+    main:NewSlider("Max","max tools",450,1250,function(c)
+        maximumTools = c
+    end)
+    main:NewButton("Stop","stops the whole crashing process",function()
+        sayMsg("stop")
+    end)
+    main:NewButton("Force Crash","force crashes",function()
+        for i,v in pairs(player.Backpack:GetChildren()) do
+            if v:IsA("Tool") then
+                v.Parent = player.Character
             end
         end
+        resetChar()
+    end)
+    main:NewSection("Graphics")
+    main:NewToggle("White Screen","white screen for alts",false,function(bool)
+        if bool then
+            sayMsg("white_in")
+        else
+            sayMsg("white_out")
+        end
+    end)
+
+    task.spawn(function()
+        while true do wait(0.01)
+            if enabled then
+                pcall(function()
+                    player.Character.HumanoidRootPart.CFrame = workspace.Ignored.Shop:FindFirstChild("[Flowers] - $5").Head.CFrame * CFrame.new(0,1.5,0)
+                    fireclickdetector(workspace.Ignored.Shop:FindFirstChild("[Flowers] - $5"):FindFirstChild("ClickDetector"))
+
+                    for i,v in pairs(workspace.Ignored:GetChildren()) do
+                        if v.Name:lower():find("flower") and (player.Character.HumanoidRootPart.Position - v.Position).Magnitude <= 5 then
+                            pcall(function() fireclickdetector(v:FindFirstChild("ClickDetector")) end)
+                        end
+                    end
+                end)
+            end
+            totalTools = countTools()
+            txt:Update("Status: "..tostring(math.floor(totalTools)).."/"..tostring(math.floor(maximumTools)).." %"..tostring(string.format("%.2f",totalTools/maximumTools*100)))
+        end
+    end)
+else
+    task.spawn(function()
+        local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/theracisthub/libs/main/ocinhot"))()
+        local main = lib:Create("Crasher")
+        main:NewLabel("you're a slave.")
+    end)
+    settings().Physics.PhysicsEnvironmentalThrottle = 1
+    settings().Rendering.QualityLevel = 'Level01'
+    for i,v in pairs(game:GetDescendants()) do
+        if v:IsA("Part") then
+            v.Material = Enum.Material.Pavement
+            v.Transparency = 1
+        elseif v:IsA("Decal") then
+            v:Destroy()
+        elseif v:IsA("Texture") then
+            v:Destroy()
+        elseif v:IsA("MeshPart") then
+            v.TextureID = 0
+            v.Transparency = 1
+        elseif v.Name == "Terrian" then
+            v.WaterReflectace = 1
+            v.WaterTransparency = 1
+        elseif v:IsA("SpotLight") then
+            v.Range = 0
+            v.Enabled = false
+        elseif v:IsA("WedgePart") then
+            v.Transparency = 1
+        elseif v:IsA("UnionOperation") then
+            v.Transparency = 1
+        end
     end
+    game:service"ReplicatedStorage".DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Connect(function(data)
+        local user = game:service"Players":GetPlayerByUserId(game:service"Players":GetUserIdFromNameAsync(data.FromSpeaker))
+        local msg = data.Message
+
+        if user.UserId == G_Settings['host'] then
+            if msg:lower() == "start" then
+                enabled = true
+            elseif msg:lower() == "pause" then
+                enabled = false
+            elseif msg:lower() == "stop" then
+                enabled = false
+                game:service"Players".LocalPlayer.Character.Humanoid.Health = 0
+            elseif msg:lower() == "white_out" then
+                game:service"RunService":Set3dRenderingEnabled(true)
+            elseif msg:lower() == "white_in" then
+                game:service"RunService":Set3dRenderingEnabled(false)
+            end
+        end
+
+        local poses = {
+            CFrame.new(1.5,1.5,0),
+            CFrame.new(1.5,1.5,-1),
+            CFrame.new(1.5,1.5,-2),
+            CFrame.new(-1.5,1.5,0),
+            CFrame.new(-1.5,1.5,-1),
+            CFrame.new(-1.5,1.5,-2)
+        }
+    
+        local pose = poses[math.random(1, #poses)]
+
+        task.spawn(function()
+            while true do wait(0.01)
+                pcall(function()
+                    if enabled then
+                        player.Character.HumanoidRootPart.CFrame = workspace.Ignored.Shop:FindFirstChild("[Flowers] - $5").Head.CFrame * pose
+                        fireclickdetector(workspace.Ignored.Shop:FindFirstChild("[Flowers] - $5"):FindFirstChild("ClickDetector"))
+                        for n, m in pairs(player.Backpack:GetChildren()) do
+                            if m.Name:lower():find("flower") then
+                                m.Parent = player.Character
+                                m:Activate()
+                                wait(1.5)
+                            end
+                        end
+                    end
+                end)
+            end
+        end)
+    end)
+
+    local fpsFunc = setfps or set_fps
+    pcall(function() fpsFunc(G_Settings['fps']) end)
 end
