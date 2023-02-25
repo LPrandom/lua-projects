@@ -89,19 +89,21 @@ if isStomper or isKiller then -- checks for mutual groups
     for i,v in pairs(game:service"GroupService":GetGroupsAsync(getgenv().BountySettings["stomper"])) do
         table.insert(stomperGroups, v.Id)
     end
+    table.sort(killersGroups)
+    table.sort(stomperGroups)
 
     event:FireServer("LeaveCrew")
     task.delay(3, function()
         pcall(function()
             player.PlayerGui.MainScreenGui.Crew.CrewFrame:Destroy()
         end)
-        for i,v in pairs(killersGroups) do
-            for c,n in pairs(stomperGroups) do
-                if v == n then
+        for i=1,#killersGroups do
+            for c=1,#stomperGroups do
+                if killersGroups[i] == stomperGroups[c] then
                     repeat -- dumb reason doesn't join first try lol
-                        event:FireServer("JoinCrew", tostring(v))
+                        event:FireServer("JoinCrew", tostring(stomperGroups[c]))
                         wait(0.01)
-                    until tostring(player.DataFolder.Information.Crew.Value) == tostring(v)
+                    until tostring(player.DataFolder.Information.Crew.Value) == tostring(stomperGroups[c])
                 end
             end
         end
